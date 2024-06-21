@@ -1,13 +1,14 @@
-# You can change this base image to anything else
-# But make sure to use the correct version of Java
+# Stage 1: Build the application (can use any Java version)
+FROM maven:alpine AS builder
+WORKDIR /app
+COPY pom.xml .
+RUN mvn package
+
+# Stage 2: Copy the application to an image with Java 17
 FROM adoptopenjdk/openjdk17:alpine-jre
 
-# Simply the artifact path
-ARG artifact=target/spring-boot-web.jar
+# Copy only the JAR file from the builder stage
+COPY builder:/app/target/*.jar app.jar
 
 WORKDIR /opt/app
-
-COPY ${artifact} app.jar
-
-# This should not be changed
-ENTRYPOINT ["java","-jar","app.jar"]
+ENTRYPOINT ["java", "-jar", "app.jar"]
